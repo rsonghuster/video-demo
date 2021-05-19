@@ -1,0 +1,135 @@
+version: v1beta1
+type: flow
+steps:
+  - type: task
+    name: Split
+    resourceArn: 'acs:fc:::services/pumpkin-video/functions/split'
+    retry:
+      - errors:
+          - FC.ResourceThrottled
+          - FC.ResourceExhausted
+          - FC.InternalServerError
+          - FnF.TaskTimeout
+          - FC.Unknown
+        intervalSeconds: 3
+        maxAttempts: 16
+        multiplier: 2
+    catch:
+      - errors:
+          - FnF.ALL
+        goto: NotifyFailed
+  - type: foreach
+    name: ParallelCensor
+    iterationMapping:
+      collection: $.split_keys
+      index: index
+      item: split_video_key
+    steps:
+      - type: task
+        name: Censor
+        resourceArn: 'acs:fc:::services/pumpkin-video/functions/censor'
+        retry:
+          - errors:
+              - FC.ResourceThrottled
+              - FC.ResourceExhausted
+              - FC.InternalServerError
+              - FnF.TaskTimeout
+              - FC.Unknown
+              - ExceptionNeedsRetry
+            intervalSeconds: 3
+            maxAttempts: 16
+            multiplier: 2
+      - type: wait
+        name: Wait30s
+        duration: 30
+      - type: task
+        name: GetCensorStatus
+        resourceArn: acs:fc:::services/pumpkin-video/functions/get-censor-status
+        retry:
+          - errors:
+              - FC.ResourceThrottled
+              - FC.ResourceExhausted
+              - FC.InternalServerError
+              - FnF.TaskTimeout
+              - FC.Unknown
+              - ExceptionNeedsRetry
+            intervalSeconds: 3
+            maxAttempts: 16
+            multiplier: 2
+      - type: choice
+        name: IsCensorComplete
+        inputMappings:
+          - target: status
+            source: $local.censorStatus
+        choices:
+          - condition: $.status == "running"
+            goto: Wait30s
+    outputMappings:
+      - target: videoCensorStatus
+        source: $local[*].censorStatus
+  - type: task
+    name: VideoCheck
+    resourceArn: 'acs:fc:::services/pumpkin-video/functions/check-video'
+    retry:
+      - errors:
+          - FC.ResourceThrottled
+          - FC.ResourceExhausted
+          - FC.InternalServerError
+          - FnF.TaskTimeout
+          - FC.Unknown
+          - ExceptionNeedsRetry
+        intervalSeconds: 3
+        maxAttempts: 16
+        multiplier: 2
+    catch:
+      - errors:
+          - FnF.ALL
+        goto: NotifyFailed
+  - type: choice
+    name: IsCensorSuccess
+    inputMappings:
+      - target: videoCensorResult
+        source: $local.videoCensorResult
+    choices:
+      - condition: $.videoCensorResult == "failed"
+        goto: NotifyFailed
+  - type: task
+    name: Snapshot
+    resourceArn: 'acs:fc:::services/pumpkin-video/functions/snapshot'
+    retry:
+      - errors:
+          - FC.ResourceThrottled
+          - FC.ResourceExhausted
+          - FC.InternalServerError
+          - FnF.TaskTimeout
+          - FC.Unknown
+          - ExceptionNeedsRetry
+        intervalSeconds: 3
+        maxAttempts: 16
+        multiplier: 2
+    catch:
+      - errors:
+          - FnF.ALL
+        goto: NotifyFailed
+  - type: task
+    name: Transcode
+    resourceArn: 'acs:fc:::services/pumpkin-video/functions/transcode'
+    retry:
+      - errors:
+          - FC.ResourceThrottled
+          - FC.ResourceExhausted
+          - FC.InternalServerError
+          - FnF.TaskTimeout
+          - FC.Unknown
+          - ExceptionNeedsRetry
+        intervalSeconds: 3
+        maxAttempts: 16
+        multiplier: 2
+    catch:
+      - errors:
+          - FnF.ALL
+        goto: NotifyFailed
+  - type: succeed
+    name: NotifySucceess
+  - type: fail
+    name: NotifyFailed

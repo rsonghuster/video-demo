@@ -1,0 +1,6 @@
+functions/split/ffmpeg
+functions/transcode/ffmpeg
+functions/snapshot/ffmpeg
+functions/snapshot/ffprobe
+.env
+.fun/tmp

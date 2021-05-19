@@ -1,0 +1,126 @@
+ROSTemplateFormatVersion: '2015-09-01'
+Transform: 'Aliyun::Serverless-2018-04-03'
+Resources:
+  pumpkin-video:
+    Type: 'Aliyun::Serverless::Service'
+    Properties:
+      Description: fnf-video-processing
+      LogConfig: Auto
+      NasConfig: Auto
+      Policies:
+        - Version: '1' # Allow ListObjects, Get/PutObject, and FC InvokeFunction
+          Statement:
+            - Effect: Allow
+              Action:
+                - oss:ListObjects
+                - oss:GetObject
+                - oss:PutObject
+                - oss:DeleteObject
+                - fc:InvokeFunction
+                - fnf:*
+                - log:*
+                - cdn:*
+                - yundun-greenweb:*
+              Resource: '*'
+    censor:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: index.handler
+        Runtime: python3
+        Timeout: 600
+        MemorySize: 128
+        CodeUri: functions/media-censor
+        EnvironmentVariables:
+          TZ: Asia/Shanghai
+
+    get-censor-status:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: index.handler
+        Runtime: python3
+        Timeout: 600
+        MemorySize: 128
+        CodeUri: functions/get-censor-status
+        EnvironmentVariables:
+          TZ: Asia/Shanghai
+
+    split:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: index.handler
+        Runtime: python3
+        Timeout: 7200
+        MemorySize: 16384
+        InstanceType: "c1"
+        CodeUri: functions/split
+        EnvironmentVariables:
+          TZ: Asia/Shanghai
+
+    transcode:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: index.handler
+        Runtime: python3
+        Timeout: 7200
+        MemorySize: 16384
+        CodeUri: functions/transcode
+        InstanceType: "c1"
+        EnvironmentVariables:
+          TZ: Asia/Shanghai
+
+    snapshot:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: index.handler
+        Runtime: python3
+        Timeout: 7200
+        MemorySize: 3072
+        CodeUri: functions/snapshot
+        EnvironmentVariables:
+          TZ: Asia/Shanghai
+
+    check-video:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: index.handler
+        Runtime: python3
+        Timeout: 600
+        MemorySize: 128
+        CodeUri: functions/check-video
+        EnvironmentVariables:
+          TZ: Asia/Shanghai
+
+    trigger-fnf:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: index.handler
+        Runtime: python3
+        Timeout: 120
+        MemorySize: 128
+        CodeUri: ./functions/oss-trigger
+        EnvironmentVariables:
+          OUTPUT_DST: outputs/
+          FLOW_NAME: pumpkin-video-flow
+          DST_FORMAT: ".mp4"
+          TZ: Asia/Shanghai
+      Events:
+        oss-t:
+          Type: OSS
+          Properties:
+            Events:
+              - 'oss:ObjectCreated:PutObject'
+              - 'oss:ObjectCreated:PostObject'
+              - 'oss:ObjectCreated:CompleteMultipartUpload'
+            Filter:
+              Key:
+                Prefix: inputs/
+                Suffix: ''
+            BucketName: pumpkin-video # change to your bucket
+
+  pumpkin-video-flow:
+    Type: 'Aliyun::Serverless::Flow'
+    Properties:
+      Description: FnF video processing demo flow
+      DefinitionUri: flows/video-processing-fc.yml
+      Policies:
+        - AliyunFCInvocationAccess

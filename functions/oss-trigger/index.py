@@ -16,9 +16,7 @@ LOGGER = logging.getLogger()
 OUTPUT_DST = os.environ["OUTPUT_DST"]
 FLOW_NAME = os.environ["FLOW_NAME"]
 DST_FORMAT = os.environ["DST_FORMAT"]
-
-# 1 min 一个分片
-DEFAULT_SEG_INTERVAL = 60
+DEFAULT_SEG_INTERVAL = os.environ.get("DEFAULT_SEG_INTERVAL", 60)
 
 
 def get_fileNameExt(filename):

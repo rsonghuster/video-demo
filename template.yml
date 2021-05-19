@@ -102,6 +102,7 @@ Resources:
           OUTPUT_DST: outputs/
           FLOW_NAME: pumpkin-video-flow
           DST_FORMAT: ".mp4"
+          DEFAULT_SEG_INTERVAL: '60'
           TZ: Asia/Shanghai
       Events:
         oss-t:

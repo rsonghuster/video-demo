@@ -46,13 +46,14 @@ def handler(event, context):
             elif 280 == taskResult["code"]:
                 censorStatus = "running"
             else:  # TODO, 这里可以处理的更加细腻些
-                raise ExceptionNeedsRetry("fail to VideoAsyncScanResults")
+                raise ExceptionNeedsRetry(
+                    "{} fail to VideoAsyncScanResults {}".format(context.request_id, taskResults))
     else:
         # 出现 errcode， 可能是内容审核那边返回限流等错误
         # https://help.aliyun.com/document_detail/53414.html?spm=a2c4g.11186623.6.623.57f5c4379FDVBW
         # 可以定义自定义错误，让 fnf 自动重试
         raise ExceptionNeedsRetry(
-            "fail to get VideoAsyncScanResults")
+            "{} fail to get VideoAsyncScanResults {}".format(context.request_id, result))
 
     return {
         "censorStatus": censorStatus

@@ -57,6 +57,7 @@ def handler(event, context):
         # 出现 errcode， 可能是内容审核那边返回限流等错误
         # https://help.aliyun.com/document_detail/53414.html?spm=a2c4g.11186623.6.623.57f5c4379FDVBW
         # 可以做更加详细的错误分析，抛出错误， 让 fnf 会自动重试
-        raise ExceptionNeedsRetry("fail to VideoAsyncScan")
+        raise ExceptionNeedsRetry(
+            "{} fail to VideoAsyncScan: {}".format(context.request_id, result))
     LOGGER.info(ret)
     return ret

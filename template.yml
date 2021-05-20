@@ -116,7 +116,7 @@ Resources:
               Key:
                 Prefix: inputs/
                 Suffix: ''
-            BucketName: pumpkin-video # change to your bucket
+            BucketName: pumpkin-videos # change to your bucket
 
   pumpkin-video-flow:
     Type: 'Aliyun::Serverless::Flow'

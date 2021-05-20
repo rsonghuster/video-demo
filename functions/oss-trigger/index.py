@@ -25,15 +25,6 @@ def get_fileNameExt(filename):
     return shortname, extension
 
 
-def get_time_str():
-    time_stamp = time.time()
-    local_time = time.localtime(time_stamp)
-    data_head = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
-    data_secs = (time_stamp - int(time_stamp)) * 1000
-    time_str = "%s.%03d" % (data_head, data_secs)
-    return time_stamp, time_str
-
-
 def handler(event, context):
     evt = json.loads(event)
     evt = evt["events"]
@@ -54,16 +45,12 @@ def handler(event, context):
     execution_name = re.sub(
         r"[^a-zA-Z0-9-_]", "_", object_key) + "-" + context.request_id
 
-    time_stamp, time_str = get_time_str()
-
     json_log = {
         "request_id": context.request_id,
         "execution_name": execution_name,
         "video_name": object_key,
         "video_format": extension[1:],
         "size": str(M_size),
-        "start_time": time_str,
-        "start_time_stamp": str(time_stamp),
         "processed_video_location": OUTPUT_DST,
     }
     print(json.dumps(json_log))

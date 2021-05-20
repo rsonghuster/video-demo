@@ -53,7 +53,7 @@ def handler(event, context):
     # 每一秒截图一张
     video_proc_dir = "/tmp/"
     subprocess.check_call(
-        ["/code/ffmpeg", "-i", input_path, "-vf", "fps=1", video_proc_dir + shortname + "_%d.jpg"])
+        ["/code/ffmpeg", "-i", input_path, "-vf", "fps=1", "-threads", "4", video_proc_dir + shortname + "_%d.jpg"])
 
     pic_prefix = os.path.join(output_prefix, execution_name)
     for filename in os.listdir(video_proc_dir):

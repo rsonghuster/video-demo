@@ -38,7 +38,8 @@ def handler(event, context):
         os.remove(transcoded_filepath)
 
     # 转码  ffmpeg 命令
-    cmd = ["/code/ffmpeg", "-y", "-i", input_path, transcoded_filepath]
+    cmd = ["/code/ffmpeg", "-y", "-threads", "4", "-i", input_path,
+           "-s", "480x360", transcoded_filepath]
     try:
         result = subprocess.run(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)

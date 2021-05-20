@@ -102,7 +102,7 @@ def handler(event, context):
         segment_time_seconds = int(math.ceil(video_duration/MAX_SPLIT_NUM)) + 1
 
     segment_time_seconds = str(segment_time_seconds)
-    exec_FFmpeg_cmd([FFMPEG_BIN, '-i', input_path, "-c", "copy", "-f", "segment", "-segment_time",
+    exec_FFmpeg_cmd([FFMPEG_BIN, '-i', input_path, "-c", "copy", "-threads", "4", "-f", "segment", "-segment_time",
                      segment_time_seconds, "-reset_timestamps", "1", video_proc_dir + "/split_" + shortname + '_piece_%02d' + extension])
 
     split_keys = []
